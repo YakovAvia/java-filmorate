@@ -19,7 +19,7 @@ import java.util.Optional;
 @RestController
 public class UserController {
 
-    private final static Logger log = LoggerFactory.getLogger(UserController.class);
+    private static final Logger log = LoggerFactory.getLogger(UserController.class);
 
     private final List<User> users = new ArrayList<>();
 
