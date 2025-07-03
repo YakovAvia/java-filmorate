@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.GetMapping;
+import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
 
@@ -28,38 +29,19 @@ public class UserController {
     @PostMapping("/users")
     public User createUser(@RequestBody User user) {
 
+        validationUsers(user);
+
         User newUser = new User();
-
         newUser.setId(++customIdCounter);
-
-        if (user.getEmail() == null || user.getEmail().isBlank() || !user.getEmail().contains("@")) {
-            log.error("Email не может быть пустым и должен содержать @!");
-            throw new ValidationException("Email не может быть пустым и должен содержать @!");
-        } else {
-            newUser.setEmail(user.getEmail());
-        }
-
-        if (user.getLogin() == null || user.getLogin().isBlank() || user.getLogin().contains(" ")) {
-            log.error("Login должен быть заполнен и не должен содержать пробелы!");
-            throw new ValidationException("Login должен быть заполнен и не должен содержать пробелы!");
-        } else {
-            newUser.setLogin(user.getLogin());
-        }
-
+        newUser.setEmail(user.getEmail());
+        newUser.setLogin(user.getLogin());
         if (user.getName() == null || user.getName().isEmpty()) {
             log.info("Имя пользователя пустое имя будет взято из Login");
             newUser.setName(user.getLogin());
         } else {
             newUser.setName(user.getName());
         }
-
-        if (user.getBirthday().isAfter(LocalDate.now())) {
-            log.error("Дата рождения не может быть больше будущего!");
-            throw new ValidationException("Дата рождения не может быть больше будущего!");
-        } else {
-            newUser.setBirthday(user.getBirthday());
-        }
-
+        newUser.setBirthday(user.getBirthday());
         users.add(newUser);
 
         return newUser;
@@ -69,7 +51,7 @@ public class UserController {
     public User updateUser(@RequestBody User user) {
 
         if (user.getId() == null) {
-            throw new ValidationException("Id пользователя не должно быть пустое!");
+            throw new NotFoundException("Id пользователя не найдено!");
         }
 
         Optional<User> optionalUser = users.stream()
@@ -78,8 +60,10 @@ public class UserController {
 
         if (optionalUser.isEmpty()) {
             log.error("Пользователь не найден!");
-            throw new ValidationException("Пользователь не найден!");
+            throw new NotFoundException("Пользователь не найден!");
         }
+
+        validationUsers(user);
 
         User updatedUser = optionalUser.get();
         updatedUser.setName(user.getName());
@@ -93,6 +77,25 @@ public class UserController {
     @GetMapping("/users")
     public List<User> getAllUsers() {
         return users;
+    }
+
+    public void validationUsers(User user) {
+
+        if (user.getEmail() == null || user.getEmail().isBlank() || !user.getEmail().contains("@")) {
+            log.error("Email не может быть пустым и должен содержать @!");
+            throw new ValidationException("Email не может быть пустым и должен содержать @!");
+        }
+
+        if (user.getLogin() == null || user.getLogin().isBlank() || user.getLogin().contains(" ")) {
+            log.error("Login должен быть заполнен и не должен содержать пробелы!");
+            throw new ValidationException("Login должен быть заполнен и не должен содержать пробелы!");
+        }
+
+        if (user.getBirthday() == null || user.getBirthday().isAfter(LocalDate.now())) {
+            log.error("Дата рождения не может быть больше будущего!");
+            throw new ValidationException("Дата рождения не может быть больше будущего!");
+        }
+
     }
 
 }

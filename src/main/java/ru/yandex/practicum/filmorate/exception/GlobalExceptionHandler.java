@@ -15,6 +15,13 @@ public class GlobalExceptionHandler {
     public ResponseEntity<Map<String,String>> handleValidationException(ValidationException ex) {
         Map<String,String> map = new HashMap<>();
         map.put("message", ex.getMessage());
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(map);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(map);
+    }
+
+    @ExceptionHandler(NotFoundException.class)
+    public ResponseEntity<Map<String,String>> handleNotFoundException(NotFoundException ex) {
+        Map<String,String> map = new HashMap<>();
+        map.put("message", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(map);
     }
 }

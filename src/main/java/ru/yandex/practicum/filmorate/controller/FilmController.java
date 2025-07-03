@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.GetMapping;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
+import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
 
 import java.time.LocalDate;
@@ -27,38 +28,14 @@ public class FilmController {
     @PostMapping("/films")
     public Film createFilm(@RequestBody Film film) {
 
+        validationFilms(film);
+
         Film newFilm = new Film();
-
         newFilm.setId(++id);
-
-        if (film.getName() != null && !film.getName().isEmpty()) {
-            newFilm.setName(film.getName());
-        } else {
-            log.error("Название не может быть пустым");
-            throw new ValidationException("Название не может быть пустым");
-        }
-
-        if (film.getDescription().length() >= 200) {
-            log.error("Длинна не может быть больше 200 символов");
-            throw new ValidationException("Длинна не может быть больше 200 символов");
-        } else {
-            newFilm.setDescription(film.getDescription());
-        }
-
-        if (!film.getReleaseDate().isBefore(LocalDate.of(1895,12,28))) {
-            newFilm.setReleaseDate(film.getReleaseDate());
-        } else {
-            log.error("Дата релиза — не раньше 28 декабря 1895 года");
-            throw new ValidationException("Дата релиза — не раньше 28 декабря 1895 года");
-        }
-
-        if (film.getDuration() > 0) {
-            newFilm.setDuration(film.getDuration());
-        } else {
-            log.error("Продолжительность фильма должна быть больше нуля");
-            throw new ValidationException("Продолжительность фильма должна быть больше нуля");
-        }
-
+        newFilm.setName(film.getName());
+        newFilm.setDescription(film.getDescription());
+        newFilm.setReleaseDate(film.getReleaseDate());
+        newFilm.setDuration(film.getDuration());
         filmList.add(newFilm);
 
         return newFilm;
@@ -68,7 +45,7 @@ public class FilmController {
     public Film updateFilm(@RequestBody Film film) {
 
         if (film.getId() == null) {
-            throw new ValidationException("ID фильма не может быть null");
+            throw new NotFoundException("ID фильма не найден!");
         }
 
         Optional<Film> optionalFilm = filmList.stream()
@@ -77,8 +54,10 @@ public class FilmController {
 
         if (optionalFilm.isEmpty()) {
             log.error("Фильм не найден!");
-            throw new ValidationException("Фильм не найден!");
+            throw new NotFoundException("Фильм не найден!");
         }
+
+        validationFilms(film);
 
         Film existingFilm = optionalFilm.get();
         existingFilm.setName(film.getName());
@@ -92,6 +71,31 @@ public class FilmController {
     @GetMapping("/films")
     public List<Film> getAllFilms() {
         return filmList;
+    }
+
+
+    public void validationFilms(Film film) {
+
+        if (film.getName() == null || film.getName().isEmpty()) {
+            log.error("Название не может быть пустым");
+            throw new ValidationException("Название не может быть пустым");
+        }
+
+        if (film.getDescription() == null || film.getDescription().length() >= 200) {
+            log.error("Длинна не может быть больше 200 символов");
+            throw new ValidationException("Длинна не может быть больше 200 символов");
+        }
+
+        if (film.getReleaseDate() == null || film.getReleaseDate().isBefore(LocalDate.of(1895,12,28))) {
+            log.error("Дата релиза — не раньше 28 декабря 1895 года");
+            throw new ValidationException("Дата релиза — не раньше 28 декабря 1895 года");
+        }
+
+        if (film.getDuration() == null || film.getDuration() < 0) {
+            log.error("Продолжительность фильма должна быть больше нуля");
+            throw new ValidationException("Продолжительность фильма должна быть больше нуля");
+        }
+
     }
 
 }
