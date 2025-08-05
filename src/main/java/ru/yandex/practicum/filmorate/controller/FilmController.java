@@ -1,101 +1,58 @@
 package ru.yandex.practicum.filmorate.controller;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.bind.annotation.GetMapping;
-import ru.yandex.practicum.filmorate.exception.ValidationException;
-import ru.yandex.practicum.filmorate.exception.NotFoundException;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.service.FilmService;
+import ru.yandex.practicum.filmorate.storage.impl.InMemoryFilmStorage;
 
-import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 @RestController
 public class FilmController {
 
-    private static final Logger log = LoggerFactory.getLogger(FilmController.class);
+    InMemoryFilmStorage storage;
 
-    private long id = 0;
+    FilmService service;
 
-    private final List<Film> filmList = new ArrayList<>();
+    @Autowired
+    public FilmController(FilmService service, InMemoryFilmStorage storage) {
+        this.service = service;
+        this.storage = storage;
+    }
 
     @PostMapping("/films")
     public Film createFilm(@RequestBody Film film) {
-
-        validationFilms(film);
-
-        Film newFilm = new Film();
-        newFilm.setId(++id);
-        newFilm.setName(film.getName());
-        newFilm.setDescription(film.getDescription());
-        newFilm.setReleaseDate(film.getReleaseDate());
-        newFilm.setDuration(film.getDuration());
-        filmList.add(newFilm);
-
-        return newFilm;
+        return storage.createFilm(film);
     }
 
     @PutMapping("/films")
     public Film updateFilm(@RequestBody Film film) {
+        return storage.updateFilm(film);
+    }
 
-        if (film.getId() == null) {
-            throw new NotFoundException("ID фильма не найден!");
-        }
+    @PutMapping("/films/{id}/like/{userId}")
+    public void likeFilm(@PathVariable Long id, @PathVariable Long userId) {
+        service.likeFilm(id, userId);
+    }
 
-        Optional<Film> optionalFilm = filmList.stream()
-                .filter(f -> f.getId().equals(film.getId()))
-                .findFirst();
+    @DeleteMapping("/films")
+    public void deleteFilm(@RequestBody Film film) {
+        storage.deleteFilm(film);
+    }
 
-        if (optionalFilm.isEmpty()) {
-            log.error("Фильм не найден!");
-            throw new NotFoundException("Фильм не найден!");
-        }
-
-        validationFilms(film);
-
-        Film existingFilm = optionalFilm.get();
-        existingFilm.setName(film.getName());
-        existingFilm.setDescription(film.getDescription());
-        existingFilm.setReleaseDate(film.getReleaseDate());
-        existingFilm.setDuration(film.getDuration());
-
-        return existingFilm;
+    @DeleteMapping("/films/{id}/like/{userId}")
+    public void deleteLikeFilm(@PathVariable Long id, @PathVariable Long userId) {
+        service.deleteLikeFilm(id, userId);
     }
 
     @GetMapping("/films")
     public List<Film> getAllFilms() {
-        return filmList;
+        return storage.getFilmList();
     }
 
-
-    public void validationFilms(Film film) {
-
-        if (film.getName() == null || film.getName().isEmpty()) {
-            log.error("Название не может быть пустым");
-            throw new ValidationException("Название не может быть пустым");
-        }
-
-        if (film.getDescription() == null || film.getDescription().length() >= 200) {
-            log.error("Длинна не может быть больше 200 символов");
-            throw new ValidationException("Длинна не может быть больше 200 символов");
-        }
-
-        if (film.getReleaseDate() == null || film.getReleaseDate().isBefore(LocalDate.of(1895,12,28))) {
-            log.error("Дата релиза — не раньше 28 декабря 1895 года");
-            throw new ValidationException("Дата релиза — не раньше 28 декабря 1895 года");
-        }
-
-        if (film.getDuration() == null || film.getDuration() < 0) {
-            log.error("Продолжительность фильма должна быть больше нуля");
-            throw new ValidationException("Продолжительность фильма должна быть больше нуля");
-        }
-
+    @GetMapping("/films/popular")
+    public List<Film> getPopularFilms(@RequestParam Integer count) {
+        return service.getFilmList(count);
     }
-
 }
