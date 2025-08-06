@@ -7,8 +7,8 @@ import org.springframework.web.server.ResponseStatusException;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
-import ru.yandex.practicum.filmorate.storage.impl.InMemoryFilmStorage;
-import ru.yandex.practicum.filmorate.storage.impl.InMemoryUserStorage;
+import ru.yandex.practicum.filmorate.storage.FilmStorage;
+import ru.yandex.practicum.filmorate.storage.UserStorage;
 
 import java.util.Comparator;
 import java.util.List;
@@ -17,12 +17,12 @@ import java.util.List;
 public class FilmService {
 
 
-    private final InMemoryFilmStorage filmStorage;
+    private final FilmStorage filmStorage;
 
-    private final InMemoryUserStorage userStorage;
+    private final UserStorage userStorage;
 
     @Autowired
-    public FilmService(InMemoryUserStorage userStorage,InMemoryFilmStorage storage) {
+    public FilmService(UserStorage userStorage, FilmStorage storage) {
         this.userStorage = userStorage;
         this.filmStorage = storage;
     }
@@ -39,14 +39,15 @@ public class FilmService {
                 .filter(u -> u.getId().equals(userId))
                 .findFirst()
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Пользователь не найден!"));
-
+        if (film.getUsers().contains(user)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Пользователь уже поставил лайк!");
+        }
         long currentLikes = film.getLike() != null ? film.getLike() : 0L;
         film.setLike(currentLikes + 1);
         film.getUsers().add(user);
     }
 
     public void deleteLikeFilm(Long filmId, Long userId) {
-
         Film film = filmStorage.getFilmList().stream()
                 .filter(film1 -> film1.getId().equals(filmId))
                 .findFirst()
@@ -57,9 +58,13 @@ public class FilmService {
                 .findFirst()
                 .orElseThrow(() -> new NotFoundException("Пользователь не найден!"));
 
+        if (!film.getUsers().contains(user)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Пользователь не лайкал фильм!");
+        }
         long currentLikes = film.getLike() != null ? film.getLike() : 0L;
         film.setLike(currentLikes - 1);
         film.getUsers().remove(user);
+
     }
 
     public List<Film> getFilmList(Integer count) {

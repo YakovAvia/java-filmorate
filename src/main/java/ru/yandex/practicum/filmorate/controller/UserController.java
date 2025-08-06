@@ -5,7 +5,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.service.UserService;
-import ru.yandex.practicum.filmorate.storage.impl.InMemoryUserStorage;
+import ru.yandex.practicum.filmorate.storage.UserStorage;
 
 import java.util.List;
 import java.util.Set;
@@ -14,13 +14,15 @@ import java.util.Set;
 @RestController
 public class UserController {
 
-    @Autowired
-    private InMemoryUserStorage userStorage;
+
+    private UserStorage userStorage;
 
     UserService userService;
 
-    public UserController(UserService userService) {
+    @Autowired
+    public UserController(UserService userService, UserStorage userStorage) {
         this.userService = userService;
+        this.userStorage = userStorage;
     }
 
     @PostMapping("/users")
@@ -62,5 +64,10 @@ public class UserController {
     @GetMapping("/users/{id}/friends/common/{otherId}")
     public Set<User> getFriendsCommon(@PathVariable Long otherId, @PathVariable Long id) {
         return userService.getMutualFriends(otherId, id);
+    }
+
+    @GetMapping("/users/{id}")
+    public User getUserById(@PathVariable Long id) {
+        return userService.getUserById(id);
     }
 }
