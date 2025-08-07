@@ -77,4 +77,20 @@ public class FilmService {
                 .limit(count)
                 .toList();
     }
+
+    public Film createFilm(Film film) {
+        return filmStorage.createFilm(film);
+    }
+
+    public Film updateFilm(Film film) {
+        return filmStorage.updateFilm(film);
+    }
+
+    public void deleteFilm(Film film) {
+        filmStorage.deleteFilm(film);
+    }
+
+    public List<Film> getFilmList() {
+        return filmStorage.getFilmList();
+    }
 }
