@@ -5,7 +5,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.service.UserService;
-import ru.yandex.practicum.filmorate.storage.UserStorage;
 
 import java.util.List;
 import java.util.Set;
@@ -14,25 +13,21 @@ import java.util.Set;
 @RestController
 public class UserController {
 
-
-    private UserStorage userStorage;
-
     UserService userService;
 
     @Autowired
-    public UserController(UserService userService, UserStorage userStorage) {
+    public UserController(UserService userService) {
         this.userService = userService;
-        this.userStorage = userStorage;
     }
 
     @PostMapping("/users")
     public User createUser(@RequestBody User user) {
-        return userStorage.createUser(user);
+        return userService.createUser(user);
     }
 
     @PutMapping("/users")
     public User updateUser(@RequestBody User user) {
-        return userStorage.updateUser(user);
+        return userService.updateUser(user);
     }
 
     @PutMapping("/users/{id}/friends/{friendId}")
@@ -43,7 +38,7 @@ public class UserController {
 
     @DeleteMapping("/users")
     public void deleteUser(@RequestBody User user) {
-        userStorage.deleteUser(user);
+        userService.deleteUser(user);
     }
 
     @DeleteMapping("/users/{id}/friends/{friendId}")
@@ -53,7 +48,7 @@ public class UserController {
 
     @GetMapping("/users")
     public List<User> getAllUsers() {
-        return userStorage.getUsers();
+        return userService.getUsers();
     }
 
     @GetMapping("/users/{id}/friends")

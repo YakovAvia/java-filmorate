@@ -95,4 +95,20 @@ public class UserService {
                 .orElseThrow(() -> new NotFoundException("Пользователь не найден!"));
     }
 
+    public User createUser(User user) {
+        return userStorage.createUser(user);
+    }
+
+    public User updateUser(User user) {
+        return userStorage.updateUser(user);
+    }
+
+    public void deleteUser(User user) {
+        userStorage.deleteUser(user);
+    }
+
+    public List<User> getUsers() {
+        userStorage.getUsers();
+    }
+
 }
