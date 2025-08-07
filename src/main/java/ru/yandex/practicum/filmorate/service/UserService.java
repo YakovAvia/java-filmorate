@@ -108,7 +108,7 @@ public class UserService {
     }
 
     public List<User> getUsers() {
-       return userStorage.getUsers();
+        return userStorage.getUsers();
     }
-    
+
 }
